@@ -54,24 +54,30 @@ To update later:
 claude plugin update de-marketplace-listing@de-marketplace-listing
 ```
 
-### Route B — Claude desktop app (Cowork)
+### Route B — Claude desktop app (Cowork) or claude.ai
 
-The desktop app installs plugins from a `.plugin` archive. Uploading it is a
-click in the app that the human does; an agent can fetch or build the archive
-and hand it over.
+Plugins for the desktop app are managed on the account, at
+**claude.ai → Customize → Plugins** (the same page is reachable from the
+desktop app's settings). These are clicks the human does; an agent can prepare
+everything else.
 
-1. Get the archive. Either download `de-marketplace-listing-<version>.plugin`
-   from the latest entry under **Releases** on this repository, or build it
-   from a clone:
+1. **Preferred: sync from this repository.** Click **Add → Add marketplace →
+   Add from a repository** and paste
+   `https://github.com/MarcvsTvllivs/de-marketplace-listing`. Then install
+   **de-marketplace-listing** from that marketplace. Updates arrive by syncing
+   the marketplace again.
+
+   *Fallback: upload the archive.* Download
+   `de-marketplace-listing-<version>.plugin` from the latest entry under
+   **Releases** on this repository (or build it from a clone with the command
+   below), then **Add → Upload plugin**, choose the file, confirm; if an older
+   version is already installed, choose **Replace**.
 
    ```bash
    git clone https://github.com/MarcvsTvllivs/de-marketplace-listing.git && cd de-marketplace-listing/plugin-source && zip -0 -r -X ../de-marketplace-listing.plugin . -x '.gitignore' -x '.DS_Store'
    ```
 
-2. In the desktop app: **Settings → Plugins → Add → Upload plugin**, choose the
-   `.plugin` file, confirm. If an older version is already installed, choose
-   **Replace**. Restart the app afterwards — the app keeps the uploaded copy as
-   the one it loads.
+2. Restart the desktop app so it picks up the new plugin.
 3. Start a Cowork session **with your listing folder connected** (the plugin
    uploads photos only from folders the session can read) and run
    `/listing-setup`. Answer the questions; it writes the seller config and a
@@ -119,4 +125,4 @@ fixture and every SKILL.md, runs the validator gate, deploys to the local
 desktop-app plugin directories (maintainer's machine only), and builds the
 `.plugin` archive. Commit, push, attach the archive to a GitHub release, and —
 for the maintainer's own desktop app — re-upload the archive under
-Settings → Plugins.
+claude.ai → Customize → Plugins → Add → Upload plugin → Replace.
