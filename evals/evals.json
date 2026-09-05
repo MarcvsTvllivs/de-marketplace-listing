@@ -1,0 +1,1268 @@
+{
+  "skill_name": "listing-drafter",
+  "description": "Tests for the listing-drafter skill. Each prompt provides all info upfront so the drafter can complete Steps A–D without interactive follow-up. Evals focus on the drafter's output (draft text shown to user + saved action file), not browser automation.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "standard-electronics-with-shipping",
+      "prompt": "I want to list my Logitech MX Master 3S wireless mouse. EAN: 5099206099111. Condition: used, a few minor scratches on the scroll wheel but fully functional. Shipping: yes, Klein size, DE + EU. Listing type: Sofort-Kaufen. For the price, please look up recent eBay sold listings and suggest something reasonable — I'll go with your recommendation. I have 3 photos ready. Please list on all three platforms and go ahead with the full listing workflow.",
+      "expected_output": "Drafter asks about marketplace selection (all three selected). Produces complete bilingual eBay description starting with <p><strong>[title]</strong></p>, KA description starting with item title as first line, Vinted description starting with item title as first line; verbatim disclaimers in <small> tags for eBay, German-only KA description with KA-specific disclaimer, short bilingual Vinted description with eBay disclaimer and no HTML. eBay price in .99 format, KA price rounded full euro. CONDITION_DROPDOWN_KA=Gut (explicit minor scratches), VINTED_CONDITION=Gut, EBAY_CONDITION=Gebraucht (used item), VINTED_SHIPPING=Vinted-Versand (Klein maps to Vinted-Versand). Action file saved to a per-item run folder under ./Listings/. EBAY_APPLIES=yes, KA_APPLIES=yes, VINTED_APPLIES=yes. ITEM_TITLE ≤ 80 chars. VINTED_TITLE present only if ITEM_TITLE exceeds 50 chars.",
+      "assertions": [
+        {
+          "name": "ebay-price-uses-99-format",
+          "description": "eBay price in action file ends in .99",
+          "check": "EBAY_PRICE field in action file matches pattern XX.99"
+        },
+        {
+          "name": "ka-price-is-full-euro",
+          "description": "KA price in action file has no decimal cents",
+          "check": "KA_PRICE field in action file is a whole number (no .XX)"
+        },
+        {
+          "name": "ebay-disclaimer-german-verbatim",
+          "description": "eBay description contains the exact German disclaimer text",
+          "check": "EBAY_DESCRIPTION block contains verbatim: 'Die Ware wird unter Ausschluss jeglicher Gewährleistung verkauft. Der Ausschluss gilt nicht für Schadenersatzansprüche aus grob fahrlässiger bzw. vorsätzlicher Verletzung von Pflichten des Verkäufers sowie für jede Verletzung von Leben, Körper und Gesundheit.\\n\\nZwischenverkauf vorbehalten.'"
+        },
+        {
+          "name": "ebay-disclaimer-english-verbatim",
+          "description": "eBay description contains the exact English disclaimer text",
+          "check": "EBAY_DESCRIPTION block contains verbatim: 'This item is sold without any warranty. This exclusion does not apply to claims for damages arising from grossly negligent or intentional breach of duty by the seller, nor to any injury to life, body, or health.\\n\\nSubject to prior sale.'"
+        },
+        {
+          "name": "ka-disclaimer-verbatim",
+          "description": "KA description contains the exact KA-specific disclaimer (longer Zwischenverkauf sentence)",
+          "check": "KA_DESCRIPTION block contains verbatim: 'Zwischenverkauf bleibt stets vorbehalten. Vertragsannahme erfolgt bei Versand durch Absendung, bei Abholung durch Übergabe.'"
+        },
+        {
+          "name": "ka-description-german-only",
+          "description": "KA description contains no obvious English sentences",
+          "check": "KA_DESCRIPTION block does not contain 'For sale' or 'Subject to prior sale' or 'This item is sold'"
+        },
+        {
+          "name": "condition-dropdown-gut",
+          "description": "KA condition mapped to 'Gut' since user mentioned explicit scratches",
+          "check": "CONDITION_DROPDOWN_KA field is 'Gut'"
+        },
+        {
+          "name": "ebay-condition-gebraucht",
+          "description": "eBay condition is 'Gebraucht' for a used item",
+          "check": "EBAY_CONDITION field is 'Gebraucht'"
+        },
+        {
+          "name": "ebay-applies-yes",
+          "description": "EBAY_APPLIES is yes since shipping is offered",
+          "check": "EBAY_APPLIES field is 'yes'"
+        },
+        {
+          "name": "ka-applies-yes",
+          "description": "KA_APPLIES is yes (all platforms selected)",
+          "check": "KA_APPLIES field is 'yes'"
+        },
+        {
+          "name": "shipping-ka-methods-correct",
+          "description": "Klein size maps to DHL 2 kg + Hermes S-Paket",
+          "check": "SHIPPING_KA_METHODS contains 'DHL Paket 2 kg' and 'Hermes S-Paket'"
+        },
+        {
+          "name": "action-file-saved",
+          "description": "Action file was created in a per-item run folder under ./Listings/",
+          "check": "A 'listing.md' file exists inside a ./Listings/[YYYY-MM-DD]-[slug]/ subfolder"
+        },
+        {
+          "name": "no-baseless-condition-claims",
+          "description": "Descriptions do not add positive claims beyond what user stated",
+          "check": "Neither EBAY_DESCRIPTION nor KA_DESCRIPTION nor VINTED_DESCRIPTION contains 'like new', 'keine Kratzer', 'no signs of use', 'einwandfreier Zustand', 'no other issues'"
+        },
+        {
+          "name": "ebay-passive-voice-opener",
+          "description": "eBay German block opens with passive voice 'Verkauft wird'",
+          "check": "EBAY_DESCRIPTION German block starts with a paragraph containing 'Verkauft wird'"
+        },
+        {
+          "name": "vinted-applies-yes",
+          "description": "VINTED_APPLIES is yes (electronics, shipped, suitable for Vinted)",
+          "check": "VINTED_APPLIES field is 'yes'"
+        },
+        {
+          "name": "vinted-condition-gut",
+          "description": "Vinted condition is 'Gut' (matches KA condition for explicit scratches)",
+          "check": "VINTED_CONDITION field is 'Gut'"
+        },
+        {
+          "name": "vinted-shipping-vinted-versand",
+          "description": "Klein maps to Vinted-Versand",
+          "check": "VINTED_SHIPPING field is 'Vinted-Versand'"
+        },
+        {
+          "name": "vinted-disclaimer-verbatim",
+          "description": "Vinted description contains the eBay German disclaimer verbatim (plain text)",
+          "check": "VINTED_DESCRIPTION block contains 'Zwischenverkauf vorbehalten.'"
+        },
+        {
+          "name": "vinted-english-block-present",
+          "description": "Vinted description has an English block ending with the English disclaimer",
+          "check": "VINTED_DESCRIPTION block contains 'Subject to prior sale.'"
+        },
+        {
+          "name": "vinted-description-no-html",
+          "description": "Vinted description contains no HTML tags",
+          "check": "VINTED_DESCRIPTION block does not contain '<p>' or '<small>' or '<strong>' or '<hr>'"
+        },
+        {
+          "name": "ebay-title-bold",
+          "description": "eBay description has the item title in bold (<strong> tags) at the top of each block",
+          "check": "EBAY_DESCRIPTION block contains '<strong>'"
+        },
+        {
+          "name": "ebay-disclaimer-in-small-tags",
+          "description": "eBay disclaimer is wrapped in <small> tags (smaller font than body)",
+          "check": "EBAY_DESCRIPTION block contains '<small>'"
+        },
+        {
+          "name": "ebay-bilingual",
+          "description": "eBay description contains both a German block and an English block",
+          "check": "EBAY_DESCRIPTION block contains 'Verkauft wird' and 'For sale'"
+        },
+        {
+          "name": "title-length-within-ebay-limit",
+          "description": "ITEM_TITLE is at most 80 characters",
+          "check": "ITEM_TITLE field has length ≤ 80 characters"
+        },
+        {
+          "name": "ebay-description-starts-with-title",
+          "description": "eBay description's German block starts with the item title in <strong> tags",
+          "check": "EBAY_DESCRIPTION block's first <strong> element text matches ITEM_TITLE"
+        },
+        {
+          "name": "ka-description-starts-with-title",
+          "description": "KA description body's first line is the item title",
+          "check": "KA_DESCRIPTION block starts with a line that matches ITEM_TITLE"
+        },
+        {
+          "name": "vinted-description-starts-with-title",
+          "description": "Vinted description's first line is the item title (VINTED_TITLE if set, else ITEM_TITLE)",
+          "check": "VINTED_DESCRIPTION block's first line matches VINTED_TITLE (if set) or ITEM_TITLE"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "no-shipping-local-pickup-only",
+      "prompt": "Ich möchte meinen alten Schreibtisch verkaufen. Kein Versand, nur Abholung. Er ist aus Holz, ca. 120x60cm, gebraucht mit einigen Gebrauchsspuren auf der Oberfläche. Preis: 80 Euro. Bitte erstelle die Anzeige auf Kleinanzeigen und, wenn sinnvoll, auf Vinted.",
+      "expected_output": "Drafter handles no-model-number furniture item. EBAY_APPLIES=no (no shipping). KA_APPLIES=yes. KA description starts with item title as first line. KA description ends with 'Abholung in Musterstadt-Altstadt.' (no Versand line). CONDITION_DROPDOWN_KA=Gut. KA_PRICE=80. SHIPPING_OFFERED=no. For Vinted: VINTED_APPLIES can be yes (Vinted has Möbel category) or no (large furniture impractical) — either is acceptable. If VINTED_APPLIES=yes then VINTED_SHIPPING=Abholung. If VINTED_APPLIES=yes, Vinted description starts with item title as first line and has no HTML.",
+      "assertions": [
+        {
+          "name": "ebay-applies-no",
+          "description": "EBAY_APPLIES is no since no shipping",
+          "check": "EBAY_APPLIES field is 'no'"
+        },
+        {
+          "name": "ka-applies-yes",
+          "description": "KA_APPLIES is yes",
+          "check": "KA_APPLIES field is 'yes'"
+        },
+        {
+          "name": "shipping-offered-no",
+          "description": "SHIPPING_OFFERED is no",
+          "check": "SHIPPING_OFFERED field is 'no'"
+        },
+        {
+          "name": "ka-pickup-only-line",
+          "description": "KA description ends with pickup-only line (no Versand reference)",
+          "check": "KA_DESCRIPTION block contains 'Abholung in Musterstadt-Altstadt.' and does NOT contain 'oder Versand nach Vorkasse'"
+        },
+        {
+          "name": "ka-disclaimer-verbatim",
+          "description": "KA description still contains the KA-specific disclaimer",
+          "check": "KA_DESCRIPTION block contains 'Zwischenverkauf bleibt stets vorbehalten. Vertragsannahme erfolgt bei Versand durch Absendung, bei Abholung durch Übergabe.'"
+        },
+        {
+          "name": "ka-description-german-only",
+          "description": "No English in KA description",
+          "check": "KA_DESCRIPTION block does not contain 'For sale' or 'Subject to prior sale'"
+        },
+        {
+          "name": "ka-price-correct",
+          "description": "KA price is 80 (full euro, no rounding needed)",
+          "check": "KA_PRICE field is '80'"
+        },
+        {
+          "name": "condition-gut",
+          "description": "Surface wear → Gut dropdown",
+          "check": "CONDITION_DROPDOWN_KA field is 'Gut'"
+        },
+        {
+          "name": "ka-description-starts-with-title",
+          "description": "KA description body's first line is the item title",
+          "check": "KA_DESCRIPTION block starts with a line that matches ITEM_TITLE"
+        },
+        {
+          "name": "title-length-within-ebay-limit",
+          "description": "ITEM_TITLE is at most 80 characters",
+          "check": "ITEM_TITLE field has length ≤ 80 characters"
+        },
+        {
+          "name": "vinted-if-applies-has-disclaimer",
+          "description": "If Vinted applies, its description contains the eBay German disclaimer verbatim",
+          "check": "If VINTED_APPLIES is 'yes': VINTED_DESCRIPTION block contains 'Zwischenverkauf vorbehalten.'. If VINTED_APPLIES is 'no': pass automatically."
+        },
+        {
+          "name": "vinted-if-applies-english-block",
+          "description": "If Vinted applies, its description has an English block with English disclaimer",
+          "check": "If VINTED_APPLIES is 'yes': VINTED_DESCRIPTION block contains 'Subject to prior sale.'. If VINTED_APPLIES is 'no': pass automatically."
+        },
+        {
+          "name": "vinted-if-applies-no-html",
+          "description": "If Vinted applies, its description has no HTML tags",
+          "check": "If VINTED_APPLIES is 'yes': VINTED_DESCRIPTION block does not contain '<p>' or '<small>' or '<strong>'. If VINTED_APPLIES is 'no': pass automatically."
+        },
+        {
+          "name": "vinted-if-applies-shipping-abholung",
+          "description": "If Vinted applies and no shipping, VINTED_SHIPPING is Abholung",
+          "check": "If VINTED_APPLIES is 'yes': VINTED_SHIPPING field is 'Abholung'. If VINTED_APPLIES is 'no': pass automatically."
+        },
+        {
+          "name": "vinted-if-applies-starts-with-title",
+          "description": "If Vinted applies, its description's first line is the item title",
+          "check": "If VINTED_APPLIES is 'yes': VINTED_DESCRIPTION block's first line matches ITEM_TITLE. If VINTED_APPLIES is 'no': pass automatically."
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "condition-edge-case-basically-new",
+      "prompt": "Selling my Sony WH-1000XM4 headphones. Model: WH-1000XM4. I only used them a handful of times — they're basically like new, I'd say. Shipping: yes, Sehr Klein, DE+EU. Sofort-Kaufen. Asking price: €180. I have 4 photos. All three platforms please.",
+      "expected_output": "Drafter asks marketplace selection (all three selected). Sets CONDITION_DROPDOWN_KA=Sehr Gut (default for vague 'like new' / lightly used claim), VINTED_CONDITION=Sehr gut, does NOT add 'keine Kratzer', 'like new', 'no signs of use', or similar claims. SHIPPING_KA_SIZE=Klein (KA has no 'Sehr Klein' — envelope-size items use Klein), SHIPPING_KA_METHODS='Hermes Päckchen, DHL Paket 2 kg', VINTED_SHIPPING=Vinted-Versand. eBay price 179.99, KA price 180, VINTED_PRICE=180. KA_APPLIES=yes. eBay description starts with <p><strong>[title]</strong></p>. KA description starts with item title as first line. Vinted description starts with item title as first line. No HTML in Vinted. ITEM_TITLE ≤ 80 chars.",
+      "assertions": [
+        {
+          "name": "condition-dropdown-sehr-gut",
+          "description": "Lightly used → Sehr Gut (default for vague 'like new' claim)",
+          "check": "CONDITION_DROPDOWN_KA field is 'Sehr Gut'"
+        },
+        {
+          "name": "vinted-condition-sehr-gut",
+          "description": "Vinted condition is 'Sehr gut' (matches KA mapping)",
+          "check": "VINTED_CONDITION field is 'Sehr gut'"
+        },
+        {
+          "name": "no-baseless-positive-claims",
+          "description": "Descriptions do not add 'no scratches', 'like new', 'keine Kratzer' as explicit claims",
+          "check": "Neither EBAY_DESCRIPTION nor KA_DESCRIPTION nor VINTED_DESCRIPTION contains 'keine Kratzer' or 'no scratches' or 'einwandfreier Zustand' or 'no signs of use'"
+        },
+        {
+          "name": "ebay-price-179-99",
+          "description": "€180 → €179.99 on eBay",
+          "check": "EBAY_PRICE field is '179.99'"
+        },
+        {
+          "name": "ka-price-180",
+          "description": "€180 stays €180 on KA (already full euro)",
+          "check": "KA_PRICE field is '180'"
+        },
+        {
+          "name": "vinted-price-180",
+          "description": "Vinted price is also €180",
+          "check": "VINTED_PRICE field is '180'"
+        },
+        {
+          "name": "shipping-ka-size-klein",
+          "description": "KA has no 'Sehr Klein' — envelope-size item is 'Klein'",
+          "check": "SHIPPING_KA_SIZE field is 'Klein'"
+        },
+        {
+          "name": "shipping-envelope-methods",
+          "description": "Envelope-size Klein → Hermes Päckchen + DHL Paket 2 kg",
+          "check": "SHIPPING_KA_METHODS contains 'Hermes Päckchen' and 'DHL Paket 2 kg' and does NOT contain 'Hermes S-Paket'"
+        },
+        {
+          "name": "vinted-shipping-vinted-versand",
+          "description": "Klein maps to Vinted-Versand",
+          "check": "VINTED_SHIPPING field is 'Vinted-Versand'"
+        },
+        {
+          "name": "ka-applies-yes",
+          "description": "KA_APPLIES is yes",
+          "check": "KA_APPLIES field is 'yes'"
+        },
+        {
+          "name": "ka-disclaimer-verbatim",
+          "description": "KA disclaimer is correct version",
+          "check": "KA_DESCRIPTION block contains 'Zwischenverkauf bleibt stets vorbehalten. Vertragsannahme erfolgt bei Versand durch Absendung, bei Abholung durch Übergabe.'"
+        },
+        {
+          "name": "ebay-disclaimer-english-verbatim",
+          "description": "eBay English disclaimer is verbatim",
+          "check": "EBAY_DESCRIPTION block contains 'Subject to prior sale.'"
+        },
+        {
+          "name": "vinted-disclaimer-verbatim",
+          "description": "Vinted description contains the eBay German disclaimer verbatim (plain text)",
+          "check": "VINTED_DESCRIPTION block contains 'Zwischenverkauf vorbehalten.'"
+        },
+        {
+          "name": "vinted-english-block-present",
+          "description": "Vinted description has an English block ending with the English disclaimer",
+          "check": "VINTED_DESCRIPTION block contains 'Subject to prior sale.'"
+        },
+        {
+          "name": "vinted-description-no-html",
+          "description": "Vinted description has no HTML tags",
+          "check": "VINTED_DESCRIPTION block does not contain '<p>' or '<small>' or '<strong>' or '<hr>'"
+        },
+        {
+          "name": "ebay-title-bold",
+          "description": "eBay description has the item title in bold (<strong> tags)",
+          "check": "EBAY_DESCRIPTION block contains '<strong>'"
+        },
+        {
+          "name": "ebay-disclaimer-in-small-tags",
+          "description": "eBay disclaimer is wrapped in <small> tags",
+          "check": "EBAY_DESCRIPTION block contains '<small>'"
+        },
+        {
+          "name": "ebay-bilingual",
+          "description": "eBay description contains both a German block and an English block",
+          "check": "EBAY_DESCRIPTION block contains 'Verkauft wird' and 'For sale'"
+        },
+        {
+          "name": "title-length-within-ebay-limit",
+          "description": "ITEM_TITLE is at most 80 characters",
+          "check": "ITEM_TITLE field has length ≤ 80 characters"
+        },
+        {
+          "name": "ebay-description-starts-with-title",
+          "description": "eBay description's German block starts with the item title in <strong> tags",
+          "check": "EBAY_DESCRIPTION block's first <strong> element text matches ITEM_TITLE"
+        },
+        {
+          "name": "ka-description-starts-with-title",
+          "description": "KA description body's first line is the item title",
+          "check": "KA_DESCRIPTION block starts with a line that matches ITEM_TITLE"
+        },
+        {
+          "name": "vinted-description-starts-with-title",
+          "description": "Vinted description's first line is the item title",
+          "check": "VINTED_DESCRIPTION block's first line matches VINTED_TITLE (if set) or ITEM_TITLE"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "ebay-auction-separate-ka-price",
+      "prompt": "Ich möchte meine alte Nikon D3500 Kamera auf eBay als Auktion anbieten. EAN: 4960759149527. Zustand: gebraucht, ein paar leichte Kratzer am Gehäuse, Sensor und Optik einwandfrei. Versand: ja, Klein, DE+EU. eBay Startpreis: €120. Ich möchte auf Kleinanzeigen €200 Festpreis haben. Vinted-Preis: €190. Ich habe 6 Fotos. Bitte alle drei Plattformen.",
+      "expected_output": "Drafter sets LISTING_TYPE=Auktion, AUCTION_START_PRICE=119.99 (.99 applied to €120), KA_PRICE=200, VINTED_PRICE=190, CONDITION_DROPDOWN_KA=Gut (housing scratches), VINTED_CONDITION=Gut, SHIPPING_KA_SIZE=Klein, VINTED_SHIPPING=Vinted-Versand, EBAY_APPLIES=yes, KA_APPLIES=yes, VINTED_APPLIES=yes. eBay description starts with <p><strong>[title]</strong></p>. KA description starts with item title as first line. Vinted description starts with item title as first line. KA price stays 200 (user stated it, already full euro). ITEM_TITLE ≤ 80 chars.",
+      "assertions": [
+        {
+          "name": "listing-type-auktion",
+          "description": "LISTING_TYPE is Auktion",
+          "check": "LISTING_TYPE field is 'Auktion'"
+        },
+        {
+          "name": "auction-start-price-set",
+          "description": "AUCTION_START_PRICE is €119.99 (.99 format applied to user's €120 start price)",
+          "check": "AUCTION_START_PRICE field is '119.99'"
+        },
+        {
+          "name": "ka-price-200",
+          "description": "KA Festpreis is 200 as separately stated",
+          "check": "KA_PRICE field is '200'"
+        },
+        {
+          "name": "vinted-price-190",
+          "description": "Vinted price is 190 as separately stated",
+          "check": "VINTED_PRICE field is '190'"
+        },
+        {
+          "name": "condition-gut-scratches",
+          "description": "Explicit housing scratches → Gut",
+          "check": "CONDITION_DROPDOWN_KA field is 'Gut'"
+        },
+        {
+          "name": "vinted-condition-gut",
+          "description": "Vinted condition matches KA: Gut",
+          "check": "VINTED_CONDITION field is 'Gut'"
+        },
+        {
+          "name": "ebay-applies-yes",
+          "description": "EBAY_APPLIES is yes (shipping offered)",
+          "check": "EBAY_APPLIES field is 'yes'"
+        },
+        {
+          "name": "ka-applies-yes",
+          "description": "KA_APPLIES is yes",
+          "check": "KA_APPLIES field is 'yes'"
+        },
+        {
+          "name": "vinted-applies-yes",
+          "description": "VINTED_APPLIES is yes (camera, suitable for Vinted)",
+          "check": "VINTED_APPLIES field is 'yes'"
+        },
+        {
+          "name": "vinted-shipping-vinted-versand",
+          "description": "Klein maps to Vinted-Versand",
+          "check": "VINTED_SHIPPING field is 'Vinted-Versand'"
+        },
+        {
+          "name": "ka-disclaimer-verbatim",
+          "description": "KA disclaimer is correct",
+          "check": "KA_DESCRIPTION block contains 'Zwischenverkauf bleibt stets vorbehalten. Vertragsannahme erfolgt bei Versand durch Absendung, bei Abholung durch Übergabe.'"
+        },
+        {
+          "name": "vinted-disclaimer-verbatim",
+          "description": "Vinted description contains the eBay German disclaimer verbatim (plain text)",
+          "check": "VINTED_DESCRIPTION block contains 'Zwischenverkauf vorbehalten.'"
+        },
+        {
+          "name": "vinted-english-block-present",
+          "description": "Vinted description has an English block ending with the English disclaimer",
+          "check": "VINTED_DESCRIPTION block contains 'Subject to prior sale.'"
+        },
+        {
+          "name": "vinted-description-no-html",
+          "description": "Vinted description has no HTML tags",
+          "check": "VINTED_DESCRIPTION block does not contain '<p>' or '<small>' or '<strong>'"
+        },
+        {
+          "name": "ebay-german-passive-opener",
+          "description": "eBay German block uses passive opener",
+          "check": "EBAY_DESCRIPTION German block contains 'Verkauft wird'"
+        },
+        {
+          "name": "ebay-title-bold",
+          "description": "eBay description has the item title in bold (<strong> tags)",
+          "check": "EBAY_DESCRIPTION block contains '<strong>'"
+        },
+        {
+          "name": "ebay-disclaimer-in-small-tags",
+          "description": "eBay disclaimer is wrapped in <small> tags",
+          "check": "EBAY_DESCRIPTION block contains '<small>'"
+        },
+        {
+          "name": "ebay-bilingual",
+          "description": "eBay description contains both a German block and an English block",
+          "check": "EBAY_DESCRIPTION block contains 'Verkauft wird' and 'For sale'"
+        },
+        {
+          "name": "title-length-within-ebay-limit",
+          "description": "ITEM_TITLE is at most 80 characters",
+          "check": "ITEM_TITLE field has length ≤ 80 characters"
+        },
+        {
+          "name": "ebay-description-starts-with-title",
+          "description": "eBay description's German block starts with the item title in <strong> tags",
+          "check": "EBAY_DESCRIPTION block's first <strong> element text matches ITEM_TITLE"
+        },
+        {
+          "name": "ka-description-starts-with-title",
+          "description": "KA description body's first line is the item title",
+          "check": "KA_DESCRIPTION block starts with a line that matches ITEM_TITLE"
+        },
+        {
+          "name": "vinted-description-starts-with-title",
+          "description": "Vinted description's first line is the item title",
+          "check": "VINTED_DESCRIPTION block's first line matches VINTED_TITLE (if set) or ITEM_TITLE"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "hp-thin-client-de-only-shipping",
+      "prompt": "I'm listing an HP t640 thin client. EAN: 195908038253. Condition: used, has some scratches on the housing, otherwise fully functional. No RAM or SSD included, just the unit and power supply. Shipping: yes, DE only, Klein. Sofort-Kaufen. For price, check recent eBay sold listings and suggest. 2 photos. All three platforms.",
+      "expected_output": "Drafter verifies HP t640 specs via EAN. SHIPPING_SCOPE=DE-only, SHIPPING_EBAY_POLICY='Paket bis 5 kg DE'. Title mentions 'Ohne RAM/SSD, mit Netzteil' using comma-separated format. CONDITION_DROPDOWN_KA=Gut, VINTED_CONDITION=Gut, VINTED_SHIPPING=Vinted-Versand (Klein). EBAY_APPLIES=yes, KA_APPLIES=yes, VINTED_APPLIES=yes. eBay description starts with <p><strong>[title]</strong></p>. KA description starts with item title as first line. Vinted description starts with item title as first line. No HTML in Vinted. Both disclaimers verbatim. No positive claims beyond what user stated. ITEM_TITLE ≤ 80 chars.",
+      "assertions": [
+        {
+          "name": "shipping-scope-de-only",
+          "description": "SHIPPING_SCOPE is DE-only",
+          "check": "SHIPPING_SCOPE field is 'DE-only'"
+        },
+        {
+          "name": "ebay-policy-standard-de-only",
+          "description": "eBay policy is the DE-only standard tier",
+          "check": "SHIPPING_EBAY_POLICY field contains 'Paket bis 5 kg DE'"
+        },
+        {
+          "name": "condition-gut-housing-scratches",
+          "description": "Explicit housing scratches → Gut",
+          "check": "CONDITION_DROPDOWN_KA field is 'Gut'"
+        },
+        {
+          "name": "vinted-condition-gut",
+          "description": "Vinted condition matches: Gut",
+          "check": "VINTED_CONDITION field is 'Gut'"
+        },
+        {
+          "name": "title-accessory-format",
+          "description": "Title uses comma-separated accessory format, not + symbol",
+          "check": "ITEM_TITLE contains ', ohne' or ', mit' (not '+ ohne' or '+ mit')"
+        },
+        {
+          "name": "ka-description-german-only",
+          "description": "No English in KA description",
+          "check": "KA_DESCRIPTION block does not contain 'For sale' or 'Subject to prior sale'"
+        },
+        {
+          "name": "vinted-applies-yes",
+          "description": "VINTED_APPLIES is yes (electronics, shippable)",
+          "check": "VINTED_APPLIES field is 'yes'"
+        },
+        {
+          "name": "ka-applies-yes",
+          "description": "KA_APPLIES is yes",
+          "check": "KA_APPLIES field is 'yes'"
+        },
+        {
+          "name": "vinted-shipping-vinted-versand",
+          "description": "Klein maps to Vinted-Versand",
+          "check": "VINTED_SHIPPING field is 'Vinted-Versand'"
+        },
+        {
+          "name": "ebay-disclaimer-german-verbatim",
+          "description": "eBay German disclaimer verbatim",
+          "check": "EBAY_DESCRIPTION block contains 'Zwischenverkauf vorbehalten.'"
+        },
+        {
+          "name": "ka-disclaimer-verbatim",
+          "description": "KA disclaimer verbatim",
+          "check": "KA_DESCRIPTION block contains 'Zwischenverkauf bleibt stets vorbehalten. Vertragsannahme erfolgt bei Versand durch Absendung, bei Abholung durch Übergabe.'"
+        },
+        {
+          "name": "vinted-disclaimer-verbatim",
+          "description": "Vinted description contains the eBay German disclaimer verbatim (plain text)",
+          "check": "VINTED_DESCRIPTION block contains 'Zwischenverkauf vorbehalten.'"
+        },
+        {
+          "name": "vinted-english-block-present",
+          "description": "Vinted description has an English block ending with the English disclaimer",
+          "check": "VINTED_DESCRIPTION block contains 'Subject to prior sale.'"
+        },
+        {
+          "name": "vinted-description-no-html",
+          "description": "Vinted description has no HTML tags",
+          "check": "VINTED_DESCRIPTION block does not contain '<p>' or '<small>' or '<strong>'"
+        },
+        {
+          "name": "no-positive-condition-claims",
+          "description": "No invented positive claims",
+          "check": "Neither EBAY_DESCRIPTION nor KA_DESCRIPTION nor VINTED_DESCRIPTION contains 'no scratches' or 'keine Kratzer' or 'like new' or 'no signs of use'"
+        },
+        {
+          "name": "ebay-title-bold",
+          "description": "eBay description has the item title in bold (<strong> tags)",
+          "check": "EBAY_DESCRIPTION block contains '<strong>'"
+        },
+        {
+          "name": "ebay-disclaimer-in-small-tags",
+          "description": "eBay disclaimer is wrapped in <small> tags",
+          "check": "EBAY_DESCRIPTION block contains '<small>'"
+        },
+        {
+          "name": "ebay-bilingual",
+          "description": "eBay description contains both a German block and an English block",
+          "check": "EBAY_DESCRIPTION block contains 'Verkauft wird' and 'For sale'"
+        },
+        {
+          "name": "title-length-within-ebay-limit",
+          "description": "ITEM_TITLE is at most 80 characters",
+          "check": "ITEM_TITLE field has length ≤ 80 characters"
+        },
+        {
+          "name": "ebay-description-starts-with-title",
+          "description": "eBay description's German block starts with the item title in <strong> tags",
+          "check": "EBAY_DESCRIPTION block's first <strong> element text matches ITEM_TITLE"
+        },
+        {
+          "name": "ka-description-starts-with-title",
+          "description": "KA description body's first line is the item title",
+          "check": "KA_DESCRIPTION block starts with a line that matches ITEM_TITLE"
+        },
+        {
+          "name": "vinted-description-starts-with-title",
+          "description": "Vinted description's first line is the item title",
+          "check": "VINTED_DESCRIPTION block's first line matches VINTED_TITLE (if set) or ITEM_TITLE"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "clothing-item-vinted-primary",
+      "prompt": "Ich möchte meine alte Levi's 501 Jeans verkaufen. Größe W32/L32, dunkelblau. Zustand: getragen, hat ein paar kleine Ausfransungen am Saum, sonst keine weiteren Schäden. Ich biete Versand an, Sehr Klein. DE+EU. Preis: €25. Nur Sofort-Kaufen. Ich habe 3 Fotos. Alle drei Plattformen bitte.",
+      "expected_output": "Drafter handles clothing item. VINTED_APPLIES=yes (clothing is Vinted's primary use case), VINTED_CONDITION=Gut (Ausfransungen am Saum = visible wear), CONDITION_DROPDOWN_KA=Gut, EBAY_APPLIES=yes (eBay has clothing too), KA_APPLIES=yes. VINTED_CATEGORY is 'Mode & Accessoires' or similar. SHIPPING_KA_SIZE=Klein (KA has no 'Sehr Klein'), VINTED_SHIPPING=Vinted-Versand. KA_PRICE=25, VINTED_PRICE=25, eBay price ~24.99. eBay description starts with <p><strong>[title]</strong></p>. KA description starts with item title as first line. Vinted description starts with item title as first line. Vinted description has no HTML. KA description is German only. eBay description is bilingual with verbatim disclaimers. ITEM_TITLE ≤ 80 chars.",
+      "assertions": [
+        {
+          "name": "vinted-applies-yes",
+          "description": "VINTED_APPLIES is yes — clothing is Vinted's primary use case",
+          "check": "VINTED_APPLIES field is 'yes'"
+        },
+        {
+          "name": "vinted-condition-gut-clothing",
+          "description": "Fraying hem = visible wear → Gut on Vinted",
+          "check": "VINTED_CONDITION field is 'Gut'"
+        },
+        {
+          "name": "condition-dropdown-gut",
+          "description": "KA condition also Gut (visible wear)",
+          "check": "CONDITION_DROPDOWN_KA field is 'Gut'"
+        },
+        {
+          "name": "ka-applies-yes",
+          "description": "KA_APPLIES is yes",
+          "check": "KA_APPLIES field is 'yes'"
+        },
+        {
+          "name": "vinted-category-clothing",
+          "description": "Vinted category is clothing-appropriate (Mode & Accessoires or Herrenmode or similar)",
+          "check": "VINTED_CATEGORY field contains 'Mode' or 'Herren' or 'Damen' or 'Bekleidung'"
+        },
+        {
+          "name": "vinted-shipping-vinted-versand",
+          "description": "Klein maps to Vinted-Versand",
+          "check": "VINTED_SHIPPING field is 'Vinted-Versand'"
+        },
+        {
+          "name": "ka-price-25",
+          "description": "KA price is €25",
+          "check": "KA_PRICE field is '25'"
+        },
+        {
+          "name": "vinted-price-25",
+          "description": "Vinted price is €25",
+          "check": "VINTED_PRICE field is '25'"
+        },
+        {
+          "name": "ebay-price-24-99",
+          "description": "eBay price is €24.99 (.99 format for €25)",
+          "check": "EBAY_PRICE field is '24.99'"
+        },
+        {
+          "name": "vinted-disclaimer-verbatim",
+          "description": "Vinted description contains the eBay German disclaimer verbatim (plain text)",
+          "check": "VINTED_DESCRIPTION block contains 'Zwischenverkauf vorbehalten.'"
+        },
+        {
+          "name": "vinted-english-block-present",
+          "description": "Vinted description has an English block ending with the English disclaimer",
+          "check": "VINTED_DESCRIPTION block contains 'Subject to prior sale.'"
+        },
+        {
+          "name": "vinted-description-no-html",
+          "description": "Vinted description has no HTML tags",
+          "check": "VINTED_DESCRIPTION block does not contain '<p>' or '<small>' or '<strong>' or '<hr>'"
+        },
+        {
+          "name": "ka-disclaimer-verbatim",
+          "description": "KA description has correct disclaimer",
+          "check": "KA_DESCRIPTION block contains 'Zwischenverkauf bleibt stets vorbehalten. Vertragsannahme erfolgt bei Versand durch Absendung, bei Abholung durch Übergabe.'"
+        },
+        {
+          "name": "ebay-bilingual",
+          "description": "eBay description contains both German and English blocks",
+          "check": "EBAY_DESCRIPTION block contains 'Verkauft wird' and 'For sale'"
+        },
+        {
+          "name": "ebay-title-bold",
+          "description": "eBay description has the item title in bold (<strong> tags)",
+          "check": "EBAY_DESCRIPTION block contains '<strong>'"
+        },
+        {
+          "name": "ebay-disclaimer-in-small-tags",
+          "description": "eBay disclaimer is wrapped in <small> tags",
+          "check": "EBAY_DESCRIPTION block contains '<small>'"
+        },
+        {
+          "name": "no-baseless-condition-claims",
+          "description": "No inventing better condition than stated",
+          "check": "Neither EBAY_DESCRIPTION nor KA_DESCRIPTION nor VINTED_DESCRIPTION contains 'keine Kratzer' or 'no signs of use' or 'wie neu' or 'einwandfreier Zustand'"
+        },
+        {
+          "name": "title-length-within-ebay-limit",
+          "description": "ITEM_TITLE is at most 80 characters",
+          "check": "ITEM_TITLE field has length ≤ 80 characters"
+        },
+        {
+          "name": "ebay-description-starts-with-title",
+          "description": "eBay description's German block starts with the item title in <strong> tags",
+          "check": "EBAY_DESCRIPTION block's first <strong> element text matches ITEM_TITLE"
+        },
+        {
+          "name": "ka-description-starts-with-title",
+          "description": "KA description body's first line is the item title",
+          "check": "KA_DESCRIPTION block starts with a line that matches ITEM_TITLE"
+        },
+        {
+          "name": "vinted-description-starts-with-title",
+          "description": "Vinted description's first line is the item title",
+          "check": "VINTED_DESCRIPTION block's first line matches VINTED_TITLE (if set) or ITEM_TITLE"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "marketplace-selection-ebay-and-ka-only",
+      "prompt": "I want to sell my Apple Magic Mouse (model A1657). Condition: used, minor surface scratches. Shipping: yes, Sehr Klein, DE+EU. Sofort-Kaufen, price €45. 2 photos. Please list on eBay and Kleinanzeigen only — I don't want Vinted.",
+      "expected_output": "Drafter respects the explicit marketplace selection: EBAY_APPLIES=yes, KA_APPLIES=yes, VINTED_APPLIES=no. No VINTED_DESCRIPTION block in the action file. No Vinted description in the draft shown to the user. eBay price 44.99, KA price 45. CONDITION_DROPDOWN_KA=Gut (minor scratches). eBay description starts with <p><strong>[title]</strong></p>. KA description starts with item title as first line. ITEM_TITLE ≤ 80 chars.",
+      "assertions": [
+        {
+          "name": "ebay-applies-yes",
+          "description": "EBAY_APPLIES is yes (user selected eBay)",
+          "check": "EBAY_APPLIES field is 'yes'"
+        },
+        {
+          "name": "ka-applies-yes",
+          "description": "KA_APPLIES is yes (user selected Kleinanzeigen)",
+          "check": "KA_APPLIES field is 'yes'"
+        },
+        {
+          "name": "vinted-applies-no",
+          "description": "VINTED_APPLIES is no (user explicitly excluded Vinted)",
+          "check": "VINTED_APPLIES field is 'no'"
+        },
+        {
+          "name": "no-vinted-description-block",
+          "description": "Action file contains no VINTED_DESCRIPTION block when Vinted not selected",
+          "check": "Action file does not contain '===VINTED_DESCRIPTION_START===' or the block is absent"
+        },
+        {
+          "name": "ebay-price-44-99",
+          "description": "eBay price is €44.99 (.99 format for €45)",
+          "check": "EBAY_PRICE field is '44.99'"
+        },
+        {
+          "name": "ka-price-45",
+          "description": "KA price is €45 (already full euro)",
+          "check": "KA_PRICE field is '45'"
+        },
+        {
+          "name": "condition-gut-surface-scratches",
+          "description": "Minor surface scratches → Gut",
+          "check": "CONDITION_DROPDOWN_KA field is 'Gut'"
+        },
+        {
+          "name": "ebay-title-bold",
+          "description": "eBay description starts with the item title in <strong> tags",
+          "check": "EBAY_DESCRIPTION block contains '<strong>'"
+        },
+        {
+          "name": "ebay-description-starts-with-title",
+          "description": "eBay description's German block starts with the item title in <strong> tags",
+          "check": "EBAY_DESCRIPTION block's first <strong> element text matches ITEM_TITLE"
+        },
+        {
+          "name": "ka-description-starts-with-title",
+          "description": "KA description body's first line is the item title",
+          "check": "KA_DESCRIPTION block starts with a line that matches ITEM_TITLE"
+        },
+        {
+          "name": "ka-description-german-only",
+          "description": "No English in KA description",
+          "check": "KA_DESCRIPTION block does not contain 'For sale' or 'Subject to prior sale'"
+        },
+        {
+          "name": "ka-disclaimer-verbatim",
+          "description": "KA disclaimer is correct",
+          "check": "KA_DESCRIPTION block contains 'Zwischenverkauf bleibt stets vorbehalten. Vertragsannahme erfolgt bei Versand durch Absendung, bei Abholung durch Übergabe.'"
+        },
+        {
+          "name": "ebay-bilingual",
+          "description": "eBay description contains both German and English blocks",
+          "check": "EBAY_DESCRIPTION block contains 'Verkauft wird' and 'For sale'"
+        },
+        {
+          "name": "ebay-disclaimer-in-small-tags",
+          "description": "eBay disclaimer is wrapped in <small> tags",
+          "check": "EBAY_DESCRIPTION block contains '<small>'"
+        },
+        {
+          "name": "title-length-within-ebay-limit",
+          "description": "ITEM_TITLE is at most 80 characters",
+          "check": "ITEM_TITLE field has length ≤ 80 characters"
+        },
+        {
+          "name": "no-baseless-condition-claims",
+          "description": "No inventing better condition than stated",
+          "check": "EBAY_DESCRIPTION and KA_DESCRIPTION do not contain 'no scratches' or 'keine Kratzer' or 'like new' or 'no signs of use'"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 8,
+      "name": "photo-staging-mixed-formats",
+      "notes": "Run generate_photo_fixtures.py first. {FIXTURES} = absolute path to evals/fixtures/photos. As of v2.4.1 the drafter converts HEIC->JPEG during staging, so the heic-converted and validator-passes assertions should now PASS (were expected-fail in v2.4.0).",
+      "prompt": "I want to list my Sony WH-1000XM4 Bluetooth Kopfhörer. EAN: 4548736112305. Condition: used, light wear on the ear pads, fully functional. Shipping: yes, Klein size, DE only. Listing type: Sofort-Kaufen. Price: €89 on eBay, you derive KA and Vinted. My 5 photos are ready as files in {FIXTURES}: item-front.jpg, item-back.jpg, item-detail.jpg, item-huge.jpg (straight off the camera, quite large), and item-iphone.heic (taken with my iPhone). Display order: front, back, detail, huge, iphone. Please list on all three platforms and go ahead with the full listing workflow.",
+      "expected_output": "Drafter acknowledges the 5 photos and locates the files. After approval (Step D) it creates the per-item run folder Listings/[YYYY-MM-DD]-[item-slug]/, saves listing.md inside it, and stages the photos directly in that folder numbered 01..05 in the stated order, downscales item-huge.jpg below 8 MB via sips, converts item-iphone.heic to JPEG (v2.4.1+), and writes PHOTO_FILES with the 5 staged absolute paths in order. PHOTO_COUNT=5. Draft FOTOS line says photos will be uploaded automatically. (Fixture originals are outside the item folder, so no original-deletion happens here.)",
+      "assertions": [
+        {
+          "name": "staging-dir-created",
+          "description": "Per-item run folder exists with listing.md and exactly 5 numbered photos",
+          "check": "Listings/[YYYY-MM-DD]-[item-slug]/ contains listing.md plus exactly 5 files named 01.* through 05.* (no photos/ subfolder)"
+        },
+        {
+          "name": "photo-files-lists-staged-copies",
+          "description": "PHOTO_FILES points at the staged copies in the item folder, not the fixture originals",
+          "check": "All 5 PHOTO_FILES paths are under Listings/[YYYY-MM-DD]-[item-slug]/ and none under evals/fixtures/"
+        },
+        {
+          "name": "photo-order-preserved",
+          "description": "Staged numbering follows the user's stated display order",
+          "check": "01 derives from item-front, 02 from item-back, 03 from item-detail, 04 from item-huge, 05 from item-iphone"
+        },
+        {
+          "name": "oversized-downscaled",
+          "description": "The >8 MB fixture was downscaled during staging",
+          "check": "Staged file 04.* is 8 MB or smaller"
+        },
+        {
+          "name": "heic-converted",
+          "description": "HEIC photo converted to an upload-safe format (Vinted rejects HEIC; fixed v2.4.1)",
+          "check": "Staged file 05.* has extension .jpg/.jpeg/.png and is not HEIC"
+        },
+        {
+          "name": "photo-count-matches",
+          "description": "PHOTO_COUNT equals number of staged paths",
+          "check": "PHOTO_COUNT field is 5 and PHOTO_FILES contains 5 comma-separated paths"
+        },
+        {
+          "name": "validator-passes",
+          "description": "Deterministic validator accepts the action file (HEIC now staged as .jpg, v2.4.1)",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] exits 0"
+        },
+        {
+          "name": "fotos-line-automatic",
+          "description": "Draft FOTOS line announces automatic upload",
+          "check": "Draft FOTOS line states photos will be uploaded automatically (not 'du lädst sie manuell hoch')"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "photo-count-without-files",
+      "notes": "No photo files exist in this scenario — tests the PHOTO_FILES NONE fallback path added in v2.4.",
+      "prompt": "I want to list my Anker PowerCore 20100 Powerbank, model A1271. Condition: used, works fine, some scuffs on the casing. Shipping: yes, smallest size, DE only. Listing type: Sofort-Kaufen. Price: €25 on eBay, you derive KA and Vinted. I have 4 photos on my phone but they are not on this computer — I will add them later myself. Please list on all three platforms and go ahead with the full listing workflow.",
+      "expected_output": "Drafter notes 4 photos but finds no file paths, tells the user photos must be added manually on each platform, and continues. SHIPPING_KA_SIZE=Klein (KA has no 'Sehr Klein'). PHOTO_COUNT=4, PHOTO_FILES=NONE. No numbered photos are staged for this item (an empty/absent run folder is fine). Draft FOTOS line uses the manual-upload wording. Listers (if simulated) skip the upload step.",
+      "assertions": [
+        {
+          "name": "photo-files-none",
+          "description": "PHOTO_FILES is NONE when no files are available",
+          "check": "PHOTO_FILES field is 'NONE'"
+        },
+        {
+          "name": "photo-count-recorded",
+          "description": "Photo count still recorded for the user's reference",
+          "check": "PHOTO_COUNT field is 4"
+        },
+        {
+          "name": "no-staging-dir",
+          "description": "No numbered photos staged without files",
+          "check": "The item run folder contains no numbered photo files (01.*, 02.*, …)"
+        },
+        {
+          "name": "user-informed-manual",
+          "description": "Drafter told the user photos need manual upload",
+          "check": "Drafter's messages state the photos must be added manually on the platforms"
+        },
+        {
+          "name": "fotos-line-manual",
+          "description": "Draft FOTOS line uses manual wording",
+          "check": "Draft FOTOS line contains manual-upload wording ('du lädst sie manuell hoch' or equivalent)"
+        },
+        {
+          "name": "validator-passes",
+          "description": "Deterministic validator accepts the file (NONE+count is a warning, not an error)",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] exits 0"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "condition-new-ovp-electronics",
+      "notes": "Tests the v2.5.1 condition fix: a genuinely new, original-packaged item must NOT be defaulted to 'used'. eBay → Neu, KA → Neu, Vinted → 'Neu, mit Etikett' (Vinted's def covers 'originalverpackt', not just clothing tags).",
+      "prompt": "Ich möchte eine fabrikneue, originalverpackte und ungeöffnete Anker 737 Powerbank (Modell A1289) verkaufen. Sie ist komplett neu, noch in der versiegelten OVP. Versand: ja, Klein, DE+EU. Sofort-Kaufen. Preis: €90 auf eBay, KA und Vinted leite bitte ab. 3 Fotos, liegen noch nicht auf dem Rechner — ich lade sie später selbst hoch. Bitte alle drei Plattformen.",
+      "expected_output": "Drafter treats this as a NEW item and does NOT default to 'used'. EBAY_CONDITION=Neu, CONDITION_DROPDOWN_KA=Neu, VINTED_CONDITION='Neu, mit Etikett' (item is OVP/sealed — Vinted's 'Neu, mit Etikett' covers 'originalverpackt', so NOT plain 'Neu'). ZUSTANDSBESCHREIBUNG_DE describes a new/sealed item without inventing flaws or unverifiable claims. EBAY_APPLIES=yes, KA_APPLIES=yes, VINTED_APPLIES=yes. SHIPPING_KA_SIZE=Klein. PHOTO_FILES=NONE, PHOTO_COUNT=3. eBay price 89.99, KA 90. ITEM_TITLE ≤ 80 chars.",
+      "assertions": [
+        {
+          "name": "ebay-condition-neu",
+          "description": "eBay condition is 'Neu' for a factory-new sealed item",
+          "check": "EBAY_CONDITION field is 'Neu'"
+        },
+        {
+          "name": "ka-condition-neu",
+          "description": "KA condition is 'Neu'",
+          "check": "CONDITION_DROPDOWN_KA field is 'Neu'"
+        },
+        {
+          "name": "vinted-condition-neu-mit-etikett",
+          "description": "Vinted condition is 'Neu, mit Etikett' for an OVP/sealed item (not plain 'Neu')",
+          "check": "VINTED_CONDITION field is 'Neu, mit Etikett'"
+        },
+        {
+          "name": "no-invented-flaws",
+          "description": "Drafter does not invent wear/Gebrauchsspuren for a new item",
+          "check": "Neither ZUSTANDSBESCHREIBUNG_DE nor any description block claims 'Gebrauchsspuren' or 'gebraucht' for this new item"
+        },
+        {
+          "name": "validator-passes",
+          "description": "Deterministic validator accepts the file",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] exits 0"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "apparel-suit-size-and-leaf",
+      "notes": "Tests the v2.5.2 apparel fixes: a clothing item must set VINTED_SIZE (Vinted Größe is a required field), and the Vinted suit leaf is 'Anzugsets' (NOT 'Anzüge', which is not a real leaf). Also exercises the eBay required-specifics expectation (size/style derivable from the item).",
+      "prompt": "Ich möchte einen Strellson Herrenanzug (Modell Rick-James) in Grau, zweiteilig (Sakko + Hose), Größe 48 verkaufen. Zustand: gebraucht, guter Zustand, wenig getragen. Versand: ja, Mittel, DE+EU. Sofort-Kaufen. Preis: €40 auf eBay, KA und Vinted leite bitte ab. 6 Fotos, liegen noch nicht auf dem Rechner — ich lade sie später selbst hoch. Bitte alle drei Plattformen.",
+      "expected_output": "Drafter produces an apparel action file. VINTED_SIZE=48 (apparel size set, not NONE). VINTED_CATEGORY ends in the 'Anzugsets' leaf (Herren > Anzüge & Blazer > Anzugsets), NOT 'Anzüge'. EBAY_CONDITION=Gebraucht, CONDITION_DROPDOWN_KA=Gut, VINTED_CONDITION=Gut (used, lightly worn → Gut). EBAY_APPLIES=yes, KA_APPLIES=yes, VINTED_APPLIES=yes. SHIPPING_KA_SIZE=Mittel, VINTED_PACKAGE_SIZE=Mittel. eBay price 39.99 (stored with a dot — the lister converts to comma at fill time), KA 40. PHOTO_FILES=NONE, PHOTO_COUNT=6. ITEM_TITLE ≤ 80 chars.",
+      "assertions": [
+        {
+          "name": "vinted-size-set",
+          "description": "VINTED_SIZE is the apparel size, not NONE",
+          "check": "VINTED_SIZE field is '48' (or the stated size), not 'NONE'"
+        },
+        {
+          "name": "vinted-leaf-anzugsets",
+          "description": "Vinted category uses the real 'Anzugsets' leaf, not the non-existent 'Anzüge'",
+          "check": "VINTED_CATEGORY ends with 'Anzugsets' and does not end with 'Anzüge'"
+        },
+        {
+          "name": "ebay-price-dotted-canonical",
+          "description": "Action file stores eBay price in machine (dotted) format",
+          "check": "EBAY_PRICE field is '39.99'"
+        },
+        {
+          "name": "package-size-mittel",
+          "description": "Mittel KA size maps to Mittel Vinted package size",
+          "check": "VINTED_PACKAGE_SIZE field is 'Mittel'"
+        },
+        {
+          "name": "validator-passes",
+          "description": "Deterministic validator accepts the file",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] exits 0"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "apparel-known-material",
+      "notes": "Tests the v2.5.3 material fix: when an apparel item's composition is known (care label given in the prompt), the drafter must populate VINTED_MATERIAL (Vinted's structured Material field) instead of leaving it NONE — and must never guess it from the EAN. Validator warns (not errors) on apparel with VINTED_SIZE set but VINTED_MATERIAL NONE.",
+      "prompt": "Ich möchte einen Strellson Herrenanzug (Modell Aidan-Max) in Hellgrau, zweiteilig (Sakko + Hose), Größe 48 verkaufen. Auf dem Pflegeetikett steht: Oberstoff 100% Schurwolle, Futter 100% Viskose. Zustand: gebraucht, sehr guter Zustand. Versand: ja, Mittel, DE+EU. Sofort-Kaufen. Preis: €60 auf eBay, KA und Vinted bitte ableiten. 5 Fotos, lade ich später selbst hoch. Bitte alle drei Plattformen.",
+      "expected_output": "Drafter produces an apparel action file. VINTED_SIZE=48. VINTED_MATERIAL is set to the known composition (e.g. '100% Schurwolle' / 'Schurwolle'), NOT NONE — taken from the stated care label, never inferred from an EAN. VINTED_CATEGORY ends in the 'Anzugsets' leaf. VINTED_CONDITION=Sehr gut (used, very good). EBAY_APPLIES=yes, KA_APPLIES=yes, VINTED_APPLIES=yes. SHIPPING_KA_SIZE=Mittel, VINTED_PACKAGE_SIZE=Mittel. PHOTO_FILES=NONE, PHOTO_COUNT=5. Validator exits 0 with no material warning.",
+      "assertions": [
+        {
+          "name": "vinted-material-set",
+          "description": "Known composition populates VINTED_MATERIAL instead of NONE",
+          "check": "VINTED_MATERIAL field is non-NONE and references the stated wool/Schurwolle composition"
+        },
+        {
+          "name": "vinted-size-set",
+          "description": "Apparel size is set",
+          "check": "VINTED_SIZE field is '48', not 'NONE'"
+        },
+        {
+          "name": "no-material-warning",
+          "description": "Validator emits no apparel-material warning because the field is filled",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] output contains no 'VINTED_MATERIAL is NONE' warning"
+        },
+        {
+          "name": "validator-passes",
+          "description": "Deterministic validator accepts the file",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] exits 0"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "ka-description-no-at-sign",
+      "prompt": "Ich möchte ein USB-C auf HDMI Adapterkabel verkaufen, 2 Meter, unterstützt 4K@60Hz. Zustand: neu, originalverpackt. Versand: ja, Klein, DE+EU. Sofort-Kaufen. Preis: bitte aus eBay-Verkäufen ableiten. 2 Fotos, lade ich später selbst hoch. Bitte alle drei Plattformen.",
+      "expected_output": "Drafter produces an action file for all three platforms. The eBay and Vinted description blocks may keep the resolution/refresh spec written with '@' (e.g. '4K@60Hz' — '@' is allowed there). The KA_DESCRIPTION block must contain NO '@' character — the drafter rewrites it (e.g. '4K bei 60Hz' or '4K/60Hz') because Kleinanzeigen rejects '@' on publish. EBAY_APPLIES=yes, KA_APPLIES=yes, VINTED_APPLIES=yes. EBAY_CONDITION=Neu (originalverpackt). Validator exits 0 with no '@' warning.",
+      "assertions": [
+        {
+          "name": "ka-description-has-no-at-sign",
+          "description": "The KA description block contains no '@' character",
+          "check": "KA_DESCRIPTION block does not contain '@'"
+        },
+        {
+          "name": "validator-no-at-warning",
+          "description": "Validator emits no KA '@' warning because the drafter removed it",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] output contains no \"KA description contains '@'\" warning"
+        },
+        {
+          "name": "validator-passes",
+          "description": "Deterministic validator accepts the file",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] exits 0"
+        }
+      ],
+      "notes": "Tests the v2.5.4 KA '@'-ban: Kleinanzeigen rejects '@' in the description on publish (a real run's '4K@60Hz' failed at publish time). The drafter must strip/replace '@' in the KA block only — eBay and Vinted keep it. The validator warns (not errors) on '@' in KA_DESCRIPTION."
+    },
+    {
+      "id": 14,
+      "name": "used-powerbank-vinted-skip",
+      "prompt": "Ich möchte eine gebrauchte OMARS 10000mAh Powerbank (Modell OMPB10PW) verkaufen. Zustand: gebraucht, gut erhalten, voll funktionsfähig. Versand: ja, Klein, DE+EU. Sofort-Kaufen. Preis: €15. 3 Fotos, lade ich später hoch. Bitte alle drei Plattformen.",
+      "expected_output": "Drafter recognises that Vinted's Powerbanks category is new-only and the item is used → sets VINTED_APPLIES=no. EBAY_APPLIES=yes, KA_APPLIES=yes. No VINTED_DESCRIPTION block in the action file. The draft notes that Vinted is skipped because used powerbanks cannot be listed there (category restriction). Validator exits 0.",
+      "assertions": [
+        {
+          "name": "vinted-applies-no",
+          "description": "Used powerbank triggers VINTED_APPLIES=no (new-only category)",
+          "check": "VINTED_APPLIES field is 'no'"
+        },
+        {
+          "name": "ebay-applies-yes",
+          "description": "EBAY_APPLIES is yes (shipping offered)",
+          "check": "EBAY_APPLIES field is 'yes'"
+        },
+        {
+          "name": "ka-applies-yes",
+          "description": "KA_APPLIES is yes",
+          "check": "KA_APPLIES field is 'yes'"
+        },
+        {
+          "name": "no-vinted-description-block",
+          "description": "No VINTED_DESCRIPTION block when VINTED_APPLIES=no",
+          "check": "Action file does not contain '===VINTED_DESCRIPTION_START==='"
+        },
+        {
+          "name": "validator-passes",
+          "description": "Deterministic validator accepts the file",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] exits 0"
+        }
+      ],
+      "notes": "Tests the v2.5.6 new-only category rule: Vinted Powerbanks only allows Neu-family conditions. A v2.5.5 run forced 'Gut' via React fiber dispatch, producing a misrepresenting draft the user had to delete. The drafter must now set VINTED_APPLIES=no for used items in such categories."
+    },
+    {
+      "id": 15,
+      "name": "vinted-description-2000-limit",
+      "prompt": "Ich möchte ein Polaroid Originals Color Spectra Film verkaufen, abgelaufen, 8 Aufnahmen, originalverpackt. Der Film ist seit Kauf im Kühlschrank gelagert, aber ich kann keine Gewährleistung für die Filmfunktion geben — bitte das ausführlich in die Beschreibung schreiben, auch auf Englisch. Zustand: Neu, OVP. Versand: ja, Klein, DE+EU. Sofort-Kaufen. Preis: €50. 7 Fotos, lade ich später hoch. Bitte alle drei Plattformen. Bitte auch erwähnen: Spectra-Kameras sind selten und die Filme sind nicht mehr in Produktion, daher ist dieser Film besonders wertvoll für Sammler. Dazu bitte noch technische Details (ISO 640, Integral-Film, ca. 10 Minuten Entwicklungszeit, Farbtemperatur Tageslicht) und einen Hinweis auf korrekte Lagerung.",
+      "expected_output": "Drafter produces a bilingual Vinted description that stays within the 2000-character hard limit. If the full disclaimers would push it over 2000 chars, the drafter switches both blocks to the short disclaimer variant (first + last sentence). The complete VINTED_DESCRIPTION block (both language blocks including the '---' separator) is ≤ 2000 characters. Validator exits 0 with no 2000-char error.",
+      "assertions": [
+        {
+          "name": "vinted-description-within-limit",
+          "description": "Complete VINTED_DESCRIPTION block is ≤ 2000 characters",
+          "check": "VINTED_DESCRIPTION block character count is ≤ 2000"
+        },
+        {
+          "name": "vinted-has-disclaimers",
+          "description": "Vinted description contains disclaimers (full or short variant)",
+          "check": "VINTED_DESCRIPTION block contains 'Zwischenverkauf vorbehalten.' and 'Subject to prior sale.'"
+        },
+        {
+          "name": "validator-no-2000-error",
+          "description": "Validator does not emit a 2000-char error",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] output contains no 'hard limit 2000' error"
+        },
+        {
+          "name": "validator-passes",
+          "description": "Deterministic validator accepts the file",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] exits 0"
+        }
+      ],
+      "notes": "Tests the v2.5.6 Vinted 2000-char limit. A v2.5.5 Polaroid run hit ~2100 chars with bilingual full disclaimers and was blocked on save. The drafter must now count the block and switch to the short disclaimer variant when needed."
+    },
+    {
+      "id": 16,
+      "name": "magazine-media-condition-scale",
+      "prompt": "Ich möchte ein Manager Magazin, Ausgabe Juli 2026, verkaufen. Zustand: gebraucht, einmal gelesen, leichte Knicke am Rücken. Versand: ja, Klein (Briefversand), DE+EU. Sofort-Kaufen. Preis: €3. 2 Fotos, lade ich später hoch. Bitte alle drei Plattformen.",
+      "expected_output": "Drafter recognises this is a media item (Bücher & Zeitschriften) and uses the eBay media condition scale. EBAY_CONDITION is 'Sehr gut' (lightly used, minor spine creases — maps to the 5-step media scale, not to 'Gebraucht'). CONDITION_DROPDOWN_KA=Gut, VINTED_CONDITION=Gut. EBAY_APPLIES=yes. Validator exits 0.",
+      "assertions": [
+        {
+          "name": "ebay-condition-media-scale",
+          "description": "eBay condition uses the media 5-step scale: 'Sehr gut' for lightly used",
+          "check": "EBAY_CONDITION field is 'Sehr gut'"
+        },
+        {
+          "name": "ka-condition-gut",
+          "description": "KA condition is Gut (visible minor wear)",
+          "check": "CONDITION_DROPDOWN_KA field is 'Gut'"
+        },
+        {
+          "name": "vinted-condition-gut",
+          "description": "Vinted condition is Gut",
+          "check": "VINTED_CONDITION field is 'Gut'"
+        },
+        {
+          "name": "ebay-applies-yes",
+          "description": "EBAY_APPLIES is yes",
+          "check": "EBAY_APPLIES field is 'yes'"
+        },
+        {
+          "name": "validator-passes",
+          "description": "Deterministic validator accepts the file",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] exits 0"
+        }
+      ],
+      "notes": "Tests the v2.5.6 media condition scale. A v2.5.5 Manager Magazin run showed eBay uses Neu/Neuwertig/Sehr gut/Gut/Akzeptabel for Bücher & Zeitschriften, not Neu/Gebraucht. The drafter must set EBAY_CONDITION from that scale for media items."
+    },
+    {
+      "id": 17,
+      "name": "letter-tier-implies-hermes-paeckchen",
+      "prompt": "Ich möchte einen SONOFF Zigbee 3.0 USB-Dongle Plus (ZBDongle-P) verkaufen, gebraucht, voll funktionsfähig, mit OVP-Karton fehlt. Versand: ja, Klein (gepolsterter Umschlag), DE+EU. Sofort-Kaufen. Preis: €15. 2 Fotos vorhanden. Alle drei Plattformen.",
+      "expected_output": "Drafter picks the letter-tier eBay policy 'Maxibrief DE & EU' for a small envelope-shippable dongle and couples the KA methods to it: SHIPPING_KA_METHODS must be the envelope variant 'Hermes Päckchen, DHL Paket 2 kg' — NOT the small-box variant (DHL Paket 2 kg + Hermes S-Paket). SHIPPING_KA_SIZE=Klein. Validator exits 0.",
+      "assertions": [
+        {
+          "name": "ebay-policy-letter-tier",
+          "description": "eBay policy is the letter tier for an envelope-shippable dongle",
+          "check": "SHIPPING_EBAY_POLICY field is 'Maxibrief DE & EU'"
+        },
+        {
+          "name": "ka-methods-envelope-variant",
+          "description": "KA methods include Hermes Päckchen (envelope variant), coupled to the letter-tier eBay policy",
+          "check": "SHIPPING_KA_METHODS field contains 'Hermes Päckchen' and 'DHL Paket 2 kg'"
+        },
+        {
+          "name": "ka-size-klein",
+          "description": "KA size is Klein",
+          "check": "SHIPPING_KA_SIZE field is 'Klein'"
+        },
+        {
+          "name": "validator-passes",
+          "description": "Deterministic validator accepts the file (letter-tier/Päckchen consistency check passes)",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] exits 0"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "name": "no-backticks-in-descriptions",
+      "prompt": "Ich verkaufe ein Anker USB-C Ladekabel, 2 m, gebraucht, funktioniert einwandfrei (getestet). Bitte übernimm diesen Hinweis in die Beschreibung: Kompatibel mit `USB-C PD` Netzteilen bis ${100W}. Versand: ja, Klein, DE+EU. Sofort-Kaufen, €8. 2 Fotos. Alle drei Plattformen.",
+      "expected_output": "Drafter writes the compatibility note WITHOUT backticks and without the '${' sequence (plain text: 'Kompatibel mit USB-C PD Netzteilen bis 100 W') — content rule 7 bans both in description blocks because the listers inject descriptions into browser-side JavaScript. The Step D validator gate runs validate_action_file.py and it exits 0. A file that kept the backticks/'${' must be rejected by the validator (exit 1) and fixed before handoff.",
+      "assertions": [
+        {
+          "name": "no-backtick-in-blocks",
+          "description": "No description block contains a backtick",
+          "check": "EBAY_DESCRIPTION, KA_DESCRIPTION and VINTED_DESCRIPTION blocks contain no ` character"
+        },
+        {
+          "name": "no-dollar-brace-in-blocks",
+          "description": "No description block contains the ${ sequence",
+          "check": "EBAY_DESCRIPTION, KA_DESCRIPTION and VINTED_DESCRIPTION blocks contain no '${' sequence"
+        },
+        {
+          "name": "validator-gate-ran-and-passed",
+          "description": "Drafter ran the mandatory Step D validator gate and the file passes",
+          "check": "python3 plugin-source/scripts/validate_action_file.py [action-file] exits 0"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "name": "small-boxed-device-stays-standard-tier",
+      "prompt": "Ich verkaufe ein Bosch Smart Home Heizkörperthermostat II BTH-RA, gebraucht, wenig Gebrauchsspuren, voll funktionsfähig, mit OVP. Versand: ja, Klein, DE+EU. Sofort-Kaufen, 32,99 €. 4 Fotos. Alle drei Plattformen.",
+      "expected_output": "Drafter picks the `standard` tier policy (\"Paket bis 5 kg DE & EU\") for eBay — a small but boxed/rigid smart-home device is NOT letter-tier; the letter tiers are only for genuinely flat, envelope-shippable items. KA methods for Klein are the envelope variant (Hermes Päckchen + DHL Paket 2 kg), independent of the eBay tier. VINTED_TITLE drops the all-caps model code BTH-RA (\"Bosch Smart Home Heizkörperthermostat II\"), which stays in ITEM_TITLE and the description body. VINTED_CATEGORY is the Smarte Thermostate leaf, not Smarte Steckdosen & Schalter. Validator exits 0.",
+      "assertions": [
+        {
+          "name": "ebay-policy-is-standard-tier",
+          "description": "Small boxed device does not get downgraded to a letter-tier policy",
+          "check": "SHIPPING_EBAY_POLICY is the config's `standard` tier policy name, not `letter_minimal`/`letter_large`"
+        },
+        {
+          "name": "ka-klein-uses-envelope-methods",
+          "description": "Klein defaults to the envelope variant regardless of the eBay tier",
+          "check": "SHIPPING_KA_METHODS contains 'Hermes Päckchen' and 'DHL Paket 2 kg'"
+        },
+        {
+          "name": "vinted-title-drops-model-code",
+          "description": "All-caps model codes are removed from the Vinted title",
+          "check": "VINTED_TITLE contains no 'BTH-RA'; ITEM_TITLE still does"
+        },
+        {
+          "name": "vinted-thermostat-leaf",
+          "description": "Thermostats use the Smarte Thermostate leaf",
+          "check": "VINTED_CATEGORY ends with 'Smarte Thermostate'"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "name": "klein-keeps-envelope-methods-and-warnings-resolved",
+      "prompt": "Ich verkaufe einen Philips Hue Bewegungsmelder, gebraucht, voll funktionsfähig, ohne OVP. Versand: ja, Klein, DE+EU. Sofort-Kaufen, 17,99 €. 3 Fotos. Alle drei Plattformen.",
+      "expected_output": "SHIPPING_KA_SIZE=Klein takes the envelope variant (Hermes Päckchen + DHL Paket 2 kg) — the box variant is only for a Klein item that genuinely needs a box, and this is not one. VINTED_PACKAGE_SIZE follows the Klein→Klein mapping. The approved draft text and the action file state the SAME shipping methods. The Step D validator gate exits 0 and any warning is explicitly resolved or justified to the user, not merely listed. VINTED_CATEGORY uses a real leaf: a motion sensor has no leaf of its own, so Smart-Home-Hubs — never the non-existent 'Sicherheitskameras & Sensoren'.",
+      "assertions": [
+        {
+          "name": "klein-uses-envelope-methods",
+          "description": "Klein defaults to the envelope variant",
+          "check": "SHIPPING_KA_METHODS contains 'Hermes Päckchen'; validator emits no Klein/Päckchen warning"
+        },
+        {
+          "name": "vinted-size-matches-ka-size",
+          "description": "Vinted package size follows the KA size mapping",
+          "check": "VINTED_PACKAGE_SIZE is 'Klein' when SHIPPING_KA_SIZE is 'Klein'"
+        },
+        {
+          "name": "draft-text-matches-action-file",
+          "description": "The shipping methods shown to the user equal the ones written to the action file",
+          "check": "The methods named in the approval draft are byte-identical to SHIPPING_KA_METHODS"
+        },
+        {
+          "name": "no-invented-vinted-leaf",
+          "description": "Vinted leaf exists in the real taxonomy",
+          "check": "VINTED_CATEGORY leaf is one of the nine real Smart Home & Sicherheit leaves; not 'Sicherheitskameras & Sensoren'"
+        },
+        {
+          "name": "warnings-resolved-not-listed",
+          "description": "Validator warnings are fixed or explicitly justified",
+          "check": "Any validator warning is either absent or accompanied by a stated reason in the draft summary"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "name": "KA shipping methods are a floor, never an exclusive pair",
+      "prompt": "Item is a rigid boxed Shelly relay, Kleinanzeigen size Klein, shipping offered DE+EU.",
+      "expected_output": "Hermes Päckchen is omitted (item is not letter-flat) and the larger methods stay selected; no method is deactivated for being too large.",
+      "assertions": [
+        "SHIPPING_KA_METHODS does not contain 'Hermes Päckchen' for a rigid boxed item",
+        "the draft never deselects a larger method that Kleinanzeigen offers",
+        "the validator emits no Klein-lacks-Päckchen warning (that v2.6.4 check was removed in 2.6.5)"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "Price ending in 9 gets ,99 appended, not a cent subtracted",
+      "prompt": "User says: Preis 299 Euro.",
+      "expected_output": "EBAY_PRICE 299.99 and VINTED_PRICE 299.99; KA_PRICE 299.",
+      "assertions": [
+        "EBAY_PRICE is 299.99, never 298.99",
+        "a price ending in 0 still loses a cent (250 -> 249.99)",
+        "no leading digit is changed"
+      ]
+    },
+    {
+      "id": 23,
+      "name": "Quantity survives the handoff",
+      "prompt": "User says they have 2 identical sets of batteries to sell on all three platforms.",
+      "expected_output": "EBAY_QUANTITY is 2; KA and Vinted descriptions describe exactly one set with no multi-set language.",
+      "assertions": [
+        "EBAY_QUANTITY: 2 is present in the action file",
+        "KA_DESCRIPTION and VINTED_DESCRIPTION contain no phrase implying multiple units",
+        "the eBay lister reads the quantity field back after setting it"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "feedback.md is written even when the run ends early",
+      "prompt": "A run drafts an item, saves the KA draft, then the browser tooling goes down and the run cannot continue.",
+      "expected_output": "feedback.md exists in the run folder describing how far the run got and why it stopped.",
+      "assertions": [
+        "feedback.md is present even though no lister was 'last'",
+        "the header carries the version from the SKILL.md Plugin version line, not 'unbekannt'",
+        "writing learnings to project memory instead does not satisfy the rule"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "platforms config restricts what is offered",
+      "prompt": "Seller config has `platforms: kleinanzeigen, vinted` (no eBay policies configured). User: 'Verkauf meine Logitech MX Master 3S, gebraucht, voll funktionsfähig, Versand DE, Klein, 3 Fotos im Ordner — auf allen Plattformen bitte.'",
+      "expected_output": "Step A0 offers only Kleinanzeigen.de and Vinted.de (both pre-selected); eBay is neither offered nor mentioned as missing. Action file has EBAY_APPLIES=no with no eBay description block, KA_APPLIES=yes, VINTED_APPLIES=yes. The drafter does not ask for eBay shipping policies. Validator exits 0.",
+      "assertions": [
+        "the platform question lists exactly the configured platforms",
+        "EBAY_APPLIES is no and the eBay description block is absent",
+        "no question about eBay shipping policies is asked",
+        "with `platforms: vinted` alone the drafter skips the question and states it is drafting for Vinted"
+      ]
+    }
+  ]
+}

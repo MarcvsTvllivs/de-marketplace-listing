@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Local Claude settings (machine-specific)
+.claude/
+
+# Personal listing outputs — drafts + item photos, keep local only
+/Listings/
+
+# Dev workspace history incl. per-run feedback about real sales — keep local
+/archive/
+
+# Large test asset
+/sample_image.jpeg
+
+# Generated photo fixtures (regenerate with evals/fixtures/generate_photo_fixtures.py)
+/evals/fixtures/photos/
+
+# Working notes and release archives stay local (archives ship via GitHub Releases)
+/tasks/
+/*.plugin

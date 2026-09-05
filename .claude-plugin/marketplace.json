@@ -1,0 +1,17 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "de-marketplace-listing",
+  "description": "Claude plugin for listing second-hand items on eBay.de, Kleinanzeigen.de and Vinted.de — draft-only, seller config via /listing-setup.",
+  "owner": {
+    "name": "Jannis Werner",
+    "url": "https://github.com/MarcvsTvllivs"
+  },
+  "plugins": [
+    {
+      "name": "de-marketplace-listing",
+      "source": "./plugin-source",
+      "description": "Cross-list second-hand items on eBay.de, Kleinanzeigen.de and Vinted.de from one drafting session — draft-only, with a seller config you set up once via /listing-setup.",
+      "category": "productivity"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "de-marketplace-listing",
+  "version": "2.7.1",
+  "description": "Cross-list second-hand items on eBay.de, Kleinanzeigen.de and Vinted.de from one drafting session: research, bilingual descriptions, shipping, optional legal boilerplate, draft-only publishing. Choose your platforms in /listing-setup.",
+  "author": {
+    "name": "Jannis Werner"
+  },
+  "homepage": "https://github.com/MarcvsTvllivs/de-marketplace-listing",
+  "repository": "https://github.com/MarcvsTvllivs/de-marketplace-listing",
+  "keywords": [
+    "ebay",
+    "kleinanzeigen",
+    "vinted",
+    "germany",
+    "listing",
+    "marketplace"
+  ]
+}
