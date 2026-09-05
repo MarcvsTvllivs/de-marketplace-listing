@@ -15,7 +15,7 @@ description: >
 
 # Listing Drafter — eBay.de, Kleinanzeigen.de & Vinted.de
 
-<!-- PLUGIN_VERSION_LINE --> **Plugin version: 2.7.1.** This string is authoritative — use it verbatim for the action file's `PLUGIN_VERSION` and for the `feedback.md` header. A skill loaded via the Skill tool cannot see `.claude-plugin/plugin.json`, so do not try to read it and never guess a version from memory.
+<!-- PLUGIN_VERSION_LINE --> **Plugin version: 2.7.2.** This string is authoritative — use it verbatim for the action file's `PLUGIN_VERSION` and for the `feedback.md` header. A skill loaded via the Skill tool cannot see `.claude-plugin/plugin.json`, so do not try to read it and never guess a version from memory.
 
 Your role: gather item information, ask which platforms to list on, write the
 complete listing descriptions for those platforms only, get user approval, save
@@ -45,8 +45,8 @@ field-by-field reference is `${CLAUDE_PLUGIN_ROOT}/templates/config-template.md`
 - `location` / `location_zip` — the platforms' location field (ZIP form when a
   form requires it)
 - `pickup_area` — the area named in the Kleinanzeigen pickup sentence
-- `languages` — `bilingual` (German + English blocks on eBay/Vinted) or
-  `german-only`
+- `languages` — `bilingual` (German + English blocks on eBay/Vinted),
+  `german-only`, or `english-only` (see Language rules)
 - `disclaimers` — `yes`/`no`: whether descriptions end with the legal
   disclaimers from `${CLAUDE_PLUGIN_ROOT}/templates/disclaimers.md`
 - `pricing_style` — `psychological` (.99) or `verbatim`
@@ -269,7 +269,7 @@ tags so it renders in a smaller font than the body.
 
 ## Condition rules
 
-Ask the user for a free-text condition description in German. From their answer,
+Ask the user for a free-text condition description in their language. From their answer,
 derive the dropdown value for **all three platforms** — eBay, Kleinanzeigen, and
 Vinted each have their own. **Never assume "used."** Map the item's actual state
 to the matching row below; a genuinely new item must get the new-item values on
@@ -316,7 +316,8 @@ unopened or as-good-as-new in its box) maps to **"Neu, mit Etikett"**, not
   Gebrauchsspuren"** (not "kaum sichtbare" — it reads more naturally and is
   accurate).
 
-**eBay Zustandsbeschreibung:** German only. Describe the physical condition of
+**eBay Zustandsbeschreibung:** German (English under `languages: english-only`).
+Describe the physical condition of
 the item only — never include accessories, scope of delivery, or other
 non-condition information in this field. For a genuinely new item this field can
 be a short positive-but-factual note (e.g. "Neu und unbenutzt, originalverpackt")
@@ -362,14 +363,27 @@ only if the user confirmed that state.
 
 ## Language rules
 
-These assume the config default `languages: bilingual`. With
-`languages: german-only`, write **only the German block** on every platform —
-no `<hr>`/`---` separator, no English block anywhere — and set
-`CONDITION_TEXT_EN: NONE` in the action file.
+**Talk to the seller in the language they write in.** The German questions and
+labels quoted in this file are examples for German-speaking sellers; an
+English-speaking seller gets the same questions, draft headings and summaries
+in English. The action file's field names and enum values never change.
+
+`languages` in the seller config decides what the **buyer** reads:
+
+- `bilingual` (default): German block first, then English — as described below.
+- `german-only`: **only the German block** on every platform — no `<hr>`/`---`
+  separator, no English block anywhere; set `CONDITION_TEXT_EN: NONE`.
+- `english-only`: **only the English block** on eBay and Vinted — no
+  `<hr>`/`---`, no German block; titles and the English disclaimers only;
+  `ZUSTANDSBESCHREIBUNG_DE` is written in English (the field keeps its name).
+  Kleinanzeigen stays German regardless (its disclaimer exists only in
+  German), so `CONDITION_TEXT_DE` is still required when KA applies and may be
+  `NONE` otherwise.
 
 - **eBay:** Fully bilingual. First a complete German block (title through
   disclaimer), then `<hr>`, then a complete English block (title through
-  disclaimer). Each block is entirely self-contained.
+  disclaimer). Each block is entirely self-contained. Under `german-only` /
+  `english-only` only that one block exists.
 - **Kleinanzeigen:** German only. No English text anywhere (regardless of the
   `languages` setting).
 - **Vinted:** Bilingual — same structure as eBay but in plain text (no HTML).
@@ -414,7 +428,8 @@ no `<hr>`/`---` separator, no English block anywhere — and set
 ## Vinted description structure
 
 Vinted descriptions are shorter and more casual than eBay or Kleinanzeigen,
-but follow the same bilingual structure with legal disclaimer. **No HTML** —
+but follow the same bilingual structure with legal disclaimer (one block only
+under german-only / english-only). **No HTML** —
 Vinted has no HTML rendering, so use plain text throughout, including for the
 disclaimer (omit `<small>` and all other tags).
 
@@ -852,7 +867,8 @@ gather normally.
   the listing on it.
 
 **A3. Condition**
-- Ask for free-text condition description in German
+- Ask for free-text condition description in the seller's language (translate
+  it for the other language block when bilingual)
 - **Ask about functionality as its own question** ("Funktioniert alles /
   getestet?"). "Voll funktionsfähig" may only be written if the user confirms
   it — it is a positive claim like any other (content rule 1). If the user
@@ -988,7 +1004,8 @@ Use this exact format:
 [Only if eBay is selected and EBAY_APPLIES=yes]
 
 [Complete HTML — German block starting with <p><strong>[title]</strong></p>,
-then <hr>, English block starting with <p><strong>[title]</strong></p>.
+then <hr>, English block starting with <p><strong>[title]</strong></p>
+(only the configured block under german-only / english-only, no <hr>).
 Include all <p>, <strong>, <small> tags. Disclaimers verbatim.]
 
 --- KLEINANZEIGEN-BESCHREIBUNG (exakter Wortlaut, nur Deutsch) ---
@@ -1300,7 +1317,8 @@ VINTED_SIZE: [apparel/shoe size as shown in Vinted's Größe selector, e.g. "48"
 VINTED_PACKAGE_SIZE: [Klein / Mittel / Groß — derived from SHIPPING_KA_SIZE / NONE]
 
 ===EBAY_DESCRIPTION_START===
-[Complete verbatim HTML — German block + <hr> + English block.
+[Complete verbatim HTML — German block + <hr> + English block (or just the
+one configured block, no <hr>, under german-only / english-only).
 Each block starts with <p><strong>[title]</strong></p>.
 Include all tags. Both disclaimers in <small> tags.
 Omit this section entirely if EBAY_APPLIES is no.]
@@ -1320,7 +1338,8 @@ Omit this section entirely if KA_APPLIES is no.]
 [Complete verbatim plain text. No HTML. Bilingual: German block (title on first
 line, description, condition, eBay German disclaimer in plain text), then --- on
 its own line, then English block (title on first line, description, condition,
-eBay English disclaimer in plain text).
+eBay English disclaimer in plain text). Under german-only / english-only only
+that block, no ---.
 Omit this section entirely if VINTED_APPLIES is no.]
 ===VINTED_DESCRIPTION_END===
 ```

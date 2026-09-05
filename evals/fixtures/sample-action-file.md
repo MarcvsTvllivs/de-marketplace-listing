@@ -7,7 +7,7 @@
 # ACTION: List Logitech MX Master 3S Wireless Maus
 
 ## FIELDS
-PLUGIN_VERSION: 2.7.1
+PLUGIN_VERSION: 2.7.2
 ITEM_TITLE: Logitech MX Master 3S Wireless Maus
 KA_TITLE: NONE
 VINTED_TITLE: NONE

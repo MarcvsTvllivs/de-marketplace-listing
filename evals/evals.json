@@ -1263,6 +1263,18 @@
         "no question about eBay shipping policies is asked",
         "with `platforms: vinted` alone the drafter skips the question and states it is drafting for Vinted"
       ]
+    },
+    {
+      "id": 26,
+      "name": "english-only language mode",
+      "prompt": "Seller config has `languages: english-only`, `platforms: vinted`, `disclaimers: yes`. User (in English): 'List my Fujifilm X100V, used, works perfectly, shipping within Germany, small parcel, 4 photos in the folder, price 900.'",
+      "expected_output": "The drafter converses in English. VINTED_DESCRIPTION has a single English block: title first line, body, CONDITION_TEXT_EN verbatim, the English disclaimer — no German block, no '---'. CONDITION_TEXT_DE is NONE (no KA). Validator exits 0.",
+      "assertions": [
+        "no German sentence anywhere in the Vinted block",
+        "no '---' separator",
+        "English disclaimer present verbatim",
+        "CONDITION_TEXT_EN appears verbatim in the block"
+      ]
     }
   ]
 }

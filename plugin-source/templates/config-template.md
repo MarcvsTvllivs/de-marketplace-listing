@@ -20,7 +20,8 @@ pickup_area: Musterstadt-Altstadt  # named in the Kleinanzeigen pickup sentence
 
 # ── How your listings read ───────────────────────────────────────────────────
 languages: bilingual            # bilingual = German block + English block on
-                                # eBay/Vinted | german-only = German only
+                                # eBay/Vinted | german-only | english-only
+                                # (Kleinanzeigen is always German)
 disclaimers: no                 # yes = end every description with the
                                 # warranty-exclusion disclaimers from
                                 # templates/disclaimers.md (a template commonly

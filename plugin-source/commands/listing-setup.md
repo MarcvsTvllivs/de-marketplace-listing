@@ -38,7 +38,8 @@ session; in Claude Code it is the project directory.
      (`location_zip`), and — Kleinanzeigen only — the pickup area named in the
      pickup sentence (`pickup_area`, usually a district of the city).
    - **Listing style:** `languages` (bilingual German+English blocks on
-     eBay/Vinted, or german-only), and `disclaimers` (yes/no). For disclaimers,
+     eBay/Vinted, german-only, or english-only — Kleinanzeigen stays German
+     either way), and `disclaimers` (yes/no). For disclaimers,
      state plainly: they are a warranty-exclusion template commonly used by
      German private sellers, **not legal advice**; their protective effect is
      strongest for private sales of used goods and can be legally ineffective

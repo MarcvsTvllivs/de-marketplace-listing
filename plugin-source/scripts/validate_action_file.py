@@ -109,8 +109,21 @@ def load_config(action_path, explicit=None):
     return cfg
 
 
+def lang():
+    """'bilingual' (default) / 'german-only' / 'english-only'."""
+    return (CFG or {}).get("languages") or "bilingual"
+
+
+def wants_de():
+    return lang() != "english-only"
+
+
+def wants_en():
+    return lang() != "german-only"
+
+
 def bilingual():
-    return CFG is None or CFG.get("languages", "bilingual") != "german-only"
+    return wants_de() and wants_en()
 
 
 def disclaimers_mode():
@@ -471,20 +484,24 @@ def check_condition_mirrored(fields, blocks):
     sentence verbatim, contradicting its own CONDITION_TEXT_DE, and nothing
     caught it because the field was only presence-checked.
     """
-    cond = (fields.get("CONDITION_TEXT_DE") or "").strip()
-    if not cond or cond == "NONE":
-        return
-    for prefix, block in (("EBAY", "EBAY_DESCRIPTION"),
-                          ("KA", "KA_DESCRIPTION"),
-                          ("VINTED", "VINTED_DESCRIPTION")):
-        body = blocks.get(block)
-        if fields.get(f"{prefix}_APPLIES") != "yes" or body is None:
+    # KA is always German; eBay/Vinted carry the German sentence unless the
+    # seller runs english-only, and the English sentence unless german-only.
+    expectations = [("CONDITION_TEXT_DE", ["KA"] + (["EBAY", "VINTED"] if wants_de() else [])),
+                    ("CONDITION_TEXT_EN", ["EBAY", "VINTED"] if wants_en() else [])]
+    for field, prefixes in expectations:
+        cond = (fields.get(field) or "").strip()
+        if not cond or cond == "NONE":
             continue
-        if cond not in body:
-            warn(f"{block} does not contain CONDITION_TEXT_DE verbatim "
-                 f"('{cond[:60]}…') — the condition text must be mirrored "
-                 f"across platforms; a differing sentence here usually means "
-                 f"text from another item leaked in")
+        for prefix in prefixes:
+            block = f"{prefix}_DESCRIPTION"
+            body = blocks.get(block)
+            if fields.get(f"{prefix}_APPLIES") != "yes" or body is None:
+                continue
+            if cond not in body:
+                warn(f"{block} does not contain {field} verbatim "
+                     f"('{cond[:60]}…') — the condition text must be mirrored "
+                     f"across platforms; a differing sentence here usually means "
+                     f"text from another item leaked in")
 
 
 def check_ebay_block(fields, blocks):
@@ -499,13 +516,16 @@ def check_ebay_block(fields, blocks):
     mode = disclaimers_mode()
     if mode == "off":
         return
-    if mode == "unknown" and normalize(DISCLAIMER_DE_P1) not in flat:
+    if mode == "unknown" and normalize(DISCLAIMER_DE_P1) not in flat \
+            and normalize(DISCLAIMER_EN_P1) not in flat:
         warn("eBay description has no disclaimer — no seller config found to "
              "confirm that's intended")
         return
-    pairs = [("German disclaimer ¶1", DISCLAIMER_DE_P1),
-             ("German disclaimer ¶2", DISCLAIMER_DE_P2_EBAY)]
-    if bilingual():
+    pairs = []
+    if wants_de():
+        pairs += [("German disclaimer ¶1", DISCLAIMER_DE_P1),
+                  ("German disclaimer ¶2", DISCLAIMER_DE_P2_EBAY)]
+    if wants_en():
         pairs += [("English disclaimer ¶1", DISCLAIMER_EN_P1),
                   ("English disclaimer ¶2", DISCLAIMER_EN_P2)]
     if body.count("<small>") < 2:
@@ -581,21 +601,23 @@ def check_vinted_block(fields, blocks):
     has_full_en = normalize(DISCLAIMER_EN_P1) in flat
     has_short_de = normalize(DISCLAIMER_DE_SHORT) in flat
     has_short_en = normalize(DISCLAIMER_EN_SHORT) in flat
-    if mode == "unknown" and not (has_full_de or has_short_de):
+    if mode == "unknown" and not (has_full_de or has_short_de or has_full_en or has_short_en):
         warn("Vinted description has no disclaimer — no seller config found to "
              "confirm that's intended")
         return
-    if has_full_de:
-        if normalize(DISCLAIMER_DE_P2_EBAY) not in flat:
-            err("Vinted description: German disclaimer ¶2 not verbatim")
-    elif not has_short_de:
-        err("Vinted description: German disclaimer not found (neither full nor short variant)")
-    if bilingual():
+    if wants_de():
+        if has_full_de:
+            if normalize(DISCLAIMER_DE_P2_EBAY) not in flat:
+                err("Vinted description: German disclaimer ¶2 not verbatim")
+        elif not has_short_de:
+            err("Vinted description: German disclaimer not found (neither full nor short variant)")
+    if wants_en():
         if has_full_en:
             if normalize(DISCLAIMER_EN_P2) not in flat:
                 err("Vinted description: English disclaimer ¶2 not verbatim")
         elif not has_short_en:
             err("Vinted description: English disclaimer not found (neither full nor short variant)")
+    if bilingual():
         if has_full_de and not has_full_en:
             err("Vinted description: mixed disclaimer variants (DE full, EN short/missing)")
         if not has_full_de and has_full_en:

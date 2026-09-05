@@ -11,7 +11,7 @@ description: >
 
 # Vinted Lister
 
-<!-- PLUGIN_VERSION_LINE --> **Plugin version: 2.7.1.** This string is authoritative — use it verbatim for the action file's `PLUGIN_VERSION` and for the `feedback.md` header. A skill loaded via the Skill tool cannot see `.claude-plugin/plugin.json`, so do not try to read it and never guess a version from memory.
+<!-- PLUGIN_VERSION_LINE --> **Plugin version: 2.7.2.** This string is authoritative — use it verbatim for the action file's `PLUGIN_VERSION` and for the `feedback.md` header. A skill loaded via the Skill tool cannot see `.claude-plugin/plugin.json`, so do not try to read it and never guess a version from memory.
 
 Your role: read the approved action file, fill in the Vinted listing form, and
 save a draft. You make no content decisions — all approved content is in the

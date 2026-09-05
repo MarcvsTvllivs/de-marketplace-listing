@@ -61,7 +61,7 @@ sessions treat "list this" as a plugin run. Re-run it anytime to change values
 | `platforms` | Which of `ebay`, `kleinanzeigen`, `vinted` you sell on — only these are offered per run; add one later by re-running `/listing-setup` |
 | `location` / `location_zip` | The location field on eBay/Kleinanzeigen (ZIP form when required) |
 | `pickup_area` | The area named in the Kleinanzeigen pickup sentence ("Abholung in …") |
-| `languages` | `bilingual` (German + English blocks on eBay/Vinted) or `german-only` |
+| `languages` | `bilingual` (German + English blocks on eBay/Vinted), `german-only`, or `english-only` (Kleinanzeigen is always German) |
 | `disclaimers` | `yes`/`no` — append the legal disclaimers (see below) |
 | `pricing_style` | `psychological` (.99 prices) or `verbatim` |
 | `ka_direkt_kaufen` | Enable Kleinanzeigen "Direkt kaufen" on shipped Festpreis listings |
